@@ -1,11 +1,11 @@
-# MintCondition
+# Mint Condition
 
 This is a little tool that maps mint.com transaction records to categories that I prefer, and does a bit more filtering that's useful for how I track my spending. I also used it to learn a bit of elixir.
 
 It's probably not terribly useful to others, but it can't hurt to share just in case someone else does a similar thing.
 
 
-# Usage
+## Usage
 
 Don't forget to add stuff to mint that's not paid by credit card / already there. (In my case: rent, medical insurance, and accountant.)
 
