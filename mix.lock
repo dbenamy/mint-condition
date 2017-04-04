@@ -1,1 +1,4 @@
-%{"csvlixir": {:git, "https://github.com/jimm/csvlixir.git", "e64e869ae83df68c4f29c66ec902ce385fef050d", []}}
+%{"csv": {:hex, :csv, "1.4.4", "992f2e1418849a326fd1d9287801fa2d86091db4f9611f60781da6d236f64cd4", [:mix], [{:parallel_stream, "~> 1.0.4", [hex: :parallel_stream, optional: false]}]},
+  "csvlixir": {:hex, :csvlixir, "2.0.4", "e80d6a4f98e3f374151307c6cfda2fea22c33737092bc23d6d085d5ed19396fe", [:mix], []},
+  "ex_csv": {:hex, :ex_csv, "0.1.5", "517222efbc87673c30c20ea8fff2cb2f6c39d7ce4ca85631cfe02293c93b3ca0", [:mix], []},
+  "parallel_stream": {:hex, :parallel_stream, "1.0.5", "4c78d3e675f9eff885cbe252c89a8fc1d2fb803c0d03a914281e587834e09431", [:mix], []}}

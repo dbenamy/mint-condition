@@ -21,7 +21,7 @@ defmodule MintCondition do
       {"Home - Stuff/Improvements", "Home"},
       {"Home - Stuff/Improvements", "Home Gadgets"},
       {"Home - Cell Phone", "Mobile Phone"},
-      {"Home - Internet", "Internet"},      
+      {"Home - Internet", "Internet"},
       {"Health - Dr, Dentist, Pharmacy", "Dentist"},
       {"Health - Dr, Dentist, Pharmacy", "Doctor"},
       {"Health - Eyecare", "Eyecare"},
@@ -49,7 +49,7 @@ defmodule MintCondition do
       {"Education", "Tuition"},
       {"Education", "Education"},
       {"Food - Groceries", "Groceries"},
-      {"Food - Alcohol & Bars", "Alcohol & Bars"},      
+      {"Food - Alcohol & Bars", "Alcohol & Bars"},
       {"Food - Eating Out", "Coffee Shops"},
       {"Food - Eating Out", "Restaurants"},
       {"Food - Eating Out", "Fast Food"},
@@ -109,8 +109,9 @@ defmodule MintCondition do
   end
 
   def read_csv(path) do
-    {:ok, str} = File.read(path)
-    rows = CSVLixir.read(str)
+    rows = File.stream!(path)
+    |> CSV.decode
+    |> Enum.to_list
     [headers | data_rows] = rows
     headers = Enum.map(headers, fn(h) ->
       h |> String.downcase |> String.replace(" ", "_")
@@ -128,15 +129,15 @@ defmodule MintCondition do
   end
 
   def keyword_list_to_map(kl) do
-    err = false
     map = List.foldl(kl, %{}, fn(pair, map) ->
       {key, val} = pair
-      if Map.has_key?(map, key) do
-        err = true
+      if map == :error || Map.has_key?(map, key) do
+        :error
+      else
+        Map.put(map, key, val)
       end
-      Map.put(map, key, val)
     end)
-    if err do
+    if map == :error do
       :error
     else
       {:ok, map}
@@ -147,10 +148,11 @@ defmodule MintCondition do
     records
     |> Enum.map(fn(r) ->
       {amount, ""} = Float.parse(r["amount"])
-      if r["transaction_type"] == "credit" do
-        amount = -amount
+      amount = if r["transaction_type"] == "credit" do
+        -amount
       else
         "debit" = r["transaction_type"] # make sure it's debit
+        amount
       end
       Map.put(r, "amount", amount)
     end)
@@ -170,26 +172,28 @@ defmodule MintCondition do
 
   def recategorize(category_map, records) do
     {recategorized, unknown_by_mint_cat} = List.foldl(records, {%{}, %{}}, fn(record, {recategorized, unknown_by_mint_cat}) ->
-      out_category = if Dict.has_key?(category_map, record["category"]) do
+      out_category = if Map.has_key?(category_map, record["category"]) do
         category_map[record["category"]]
       else
         "Unmapped"
       end
-      recs_for_cat = Dict.get(recategorized, out_category, [])
+      recs_for_cat = Map.get(recategorized, out_category, [])
       recategorized = Map.put(recategorized, out_category, [record | recs_for_cat])
- 
-      if out_category == "Unmapped" do
-        recs_for_cat = Dict.get(unknown_by_mint_cat, record["category"], [])
-        unknown_by_mint_cat = Map.put(unknown_by_mint_cat, record["category"], [record | recs_for_cat])
+
+      unknown_by_mint_cat = if out_category == "Unmapped" do
+        recs_for_cat = Map.get(unknown_by_mint_cat, record["category"], [])
+        Map.put(unknown_by_mint_cat, record["category"], [record | recs_for_cat])
+      else
+        unknown_by_mint_cat
       end
- 
+
       {recategorized, unknown_by_mint_cat}
     end)
     {:ok, recategorized, unknown_by_mint_cat}
   end
 
   def output_results(recategorized_by_output_cat, unknown_by_mint_cat) do
-    cat_sums = Dict.keys(recategorized_by_output_cat)
+    cat_sums = Map.keys(recategorized_by_output_cat)
     |> Enum.sort
     |> Enum.map(fn(out_cat) ->
       records = recategorized_by_output_cat[out_cat]
@@ -201,16 +205,16 @@ defmodule MintCondition do
     Enum.each(cat_sums, fn({out_cat, sum}) ->
       :io.format("#{out_cat}: $~.2f\n", [sum])
     end)
-    total = Enum.map(cat_sums, fn({cat, sum}) -> sum end) |> Enum.sum()
+    total = Enum.map(cat_sums, fn({_, sum}) -> sum end) |> Enum.sum()
     :io.format("Total: $~.2f\n", [total])
-    
+
     IO.puts("\nMoney spent in each output category (monthly average):")
     Enum.each(cat_sums, fn({out_cat, sum}) ->
       :io.format("#{out_cat}: $~.2f\n", [sum / 12])
     end)
-    total = Enum.map(cat_sums, fn({cat, sum}) -> sum end) |> Enum.sum()
+    total = Enum.map(cat_sums, fn({_, sum}) -> sum end) |> Enum.sum()
     :io.format("Total: $~.2f\n", [total / 12])
-    
+
     IO.puts("\nMint categories and records that weren't mapped to an output category:")
     Enum.each(unknown_by_mint_cat, fn({cat, records}) ->
       IO.puts("#{cat}:")

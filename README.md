@@ -13,7 +13,7 @@ Go to https://wwws.mint.com/transaction.event?exclHidden=T&startDate=1/1/2015&en
 
 ```
 mix deps.get
-mix escriptize
+mix escript.build
 ./mint_condition transactions.csv
 ```
 

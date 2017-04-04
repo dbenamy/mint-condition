@@ -4,9 +4,9 @@ defmodule MintCondition.Mixfile do
   def project do
     [app: :mint_condition,
      version: "0.0.1",
-     elixir: "~> 0.14.0",
-     escript: escript,
-     deps: deps]
+     elixir: "~> 1.4.0",
+     escript: escript(),
+     deps: deps()]
   end
 
   def escript do
@@ -31,7 +31,7 @@ defmodule MintCondition.Mixfile do
   # Type `mix help deps` for more examples and options
   defp deps do
     [
-      {:csvlixir, git: "https://github.com/jimm/csvlixir.git"}
+      {:csv, "~> 1.4.2"}
     ]
   end
 end
